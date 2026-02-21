@@ -1,0 +1,4 @@
+# Fichier contenant les variables sensibles
+# Ne doit jamais être pushé sur GitHub !
+node_modules/
+.env
