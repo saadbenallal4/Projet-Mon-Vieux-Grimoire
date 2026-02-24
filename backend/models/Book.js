@@ -2,8 +2,12 @@ const mongoose = require('mongoose');
 
 /* Schéma Book
    Définit la structure des données stockées en base.
- Chaque champ possède un type.*/
+ Chaque champ possède un type */
 const bookSchema = mongoose.Schema({
+    userId: {
+        type: String,
+        required: true
+    },
     title: {
         type: String,
         required: true
@@ -12,12 +16,27 @@ const bookSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    imageUrl: {
+        type: String,
+        required: true
+    },
     year: {
         type: Number,
         required: true
     },
     genre: {
-        type: String
+        type: String,
+        required: true
+    },
+    ratings: [
+        {
+            userId: { type: String },
+            grade: { type: Number }
+        }
+    ],
+    averageRating: {
+        type: Number,
+        default: 0
     }
 });
 
