@@ -5,6 +5,7 @@ const router = express.Router();
 const bookController = require('../controllers/bookController');
 // Middleware d'authentification
 const auth = require('../middleware/auth');
+const multer = require('../middleware/multer-config');
 
 /* GET tous les livres
  * Route publique (pas besoin d'être connecté) */
@@ -15,7 +16,7 @@ router.get('/:id', bookController.getOneBook);
 
 /* POST créer un livre
    Route protégée (token obligatoire) */
-router.post('/', auth, bookController.createBook);
+router.post('/', auth, multer, bookController.createBook);
 
 /* DELETE supprimer un livre */
 router.delete('/:id', auth, bookController.deleteBook);

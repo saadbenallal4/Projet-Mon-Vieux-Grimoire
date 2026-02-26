@@ -21,6 +21,10 @@ const app = express();
 app.use(express.json());
 app.use('/api/books', bookRoutes);
 app.use('/api/auth', authRoutes);
+const path = require('path');
+
+/* Rend le dossier images accessible publiquement */
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 /* CONNEXION A MONGODB 
 L’URI de connexion est stockée dans le .env
