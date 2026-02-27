@@ -54,7 +54,6 @@ exports.getOneBook = (req, res) => {
 // SUPPRIMER UN LIVRE
 // Route : DELETE /api/books/:id
 /* Supprimer un livre + supprimer son image sur le serveur */
-const fs = require('fs');
 
 exports.deleteBook = (req, res) => {
     Book.findOne({ _id: req.params.id })
@@ -64,20 +63,22 @@ exports.deleteBook = (req, res) => {
             // Sécurité : seul le propriétaire peut supprimer
             // utilisation de .equals() pour éviter les pb de comparaisons de type
             if (!book.userId.equals(req.auth.userId)) {
+                console.log("toto")
                 return res.status(403).json({ message: "Non autorisé !" });
             }
 
             // Suppression du fichier image
             console.log("imageUrl:", book.imageUrl);
             const filename = book.imageUrl.split('/images/')[1];
+            console.log(filename)
             fs.unlink(`images/${filename}`, () => {
                 // Suppression du livre en base
                 Book.deleteOne({ _id: req.params.id })
                     .then(() => res.status(200).json({ message: 'Livre supprimé !' }))
-                    .catch(error => res.status(400).json({ error }));
+                    .catch(error => res.status(400).json({ error: "supression impossible" }));
             });
         })
-        .catch(error => res.status(400).json({ error }));
+        .catch(error => res.status(400).json({ error: "erreur globale" }));
 };
 
 // MODIFIER UN LIVRE
@@ -114,8 +115,52 @@ exports.updateBook = (req, res) => {
                 { ...bookObject, _id: req.params.id }
             )
                 .then(() => res.status(200).json({ message: "Livre modifié !" }))
+                // Erreur lors de la mise à jour du livre
                 .catch(error => res.status(400).json({ error }));
 
         })
+        // Erreur lors de récupération du livre
         .catch(error => res.status(400).json({ error }));
+};
+
+exports.rateBook = (req, res) => {
+    Book.findOne({ _id: req.params.id })
+        .then(book => {
+
+            // Vérifie si l'utilisateur a déjà noté ce livre
+            const alreadyRated = book.ratings.find(
+                rating => rating.userId === req.auth.userId
+            );
+
+            if (alreadyRated) {
+                return res.status(400).json({ message: "Vous avez déjà noté ce livre !" });
+            }
+
+            // Ajout de la nouvelle note dans le tableau ratings
+            book.ratings.push({
+                userId: req.auth.userId,
+                grade: req.body.rating
+            });
+
+            // Calcul de la nouvelle moyenne des notes
+            const total = book.ratings.reduce(
+                (sum, rating) => sum + rating.grade,
+                0
+            );
+
+            book.averageRating = total / book.ratings.length;
+
+            // Sauvegarde du livre mis à jour en base de données
+            book.save()
+                .then(updatedBook => res.status(200).json(updatedBook))
+                .catch(error => {
+                    // Erreur lors de la sauvegarde du livre
+                    res.status(400).json({ error });
+                });
+
+        })
+        .catch(error => {
+            // Erreur lors de la récupération du livre
+            res.status(404).json({ error });
+        });
 };
