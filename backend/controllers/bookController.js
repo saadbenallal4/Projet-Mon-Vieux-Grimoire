@@ -16,12 +16,22 @@ exports.createBook = async (req, res) => {
         // Optimisation de l'image avec Sharp
         await sharp(req.file.buffer)
             .resize({ width: 800 }) // largeur max 800px
-            .webp({ quality: 80 }) // conversion en WebP compressé
+            .webp({ quality: 80 }) // conversion en WebP compressée
             .toFile(`images/${filename}`); // sauvegarde optimisée
 
         const book = new Book({
             userId: req.auth.userId,
-            ...bookObject,
+
+            // On empêche le frontend d’injecter ses propres valeurs
+            title: bookObject.title,
+            author: bookObject.author,
+            year: bookObject.year,
+            genre: bookObject.genre,
+
+            // Initialisation obligatoire pour éviter bug au moment du rating
+            averageRating: 0,
+            ratings: [],
+
             imageUrl: `${req.protocol}://${req.get('host')}/images/${filename}`
         });
 
@@ -30,6 +40,7 @@ exports.createBook = async (req, res) => {
         res.status(201).json({ message: 'Livre enregistré avec image optimisée !' });
 
     } catch (error) {
+        // Erreur lors du parsing, du traitement image ou de la sauvegarde en base
         res.status(400).json({ error });
     }
 };
@@ -62,15 +73,13 @@ exports.deleteBook = (req, res) => {
             console.log("req.auth.userId:", req.auth.userId);
             // Sécurité : seul le propriétaire peut supprimer
             // utilisation de .equals() pour éviter les pb de comparaisons de type
-            if (!book.userId.equals(req.auth.userId)) {
-                console.log("toto")
+            if (book.userId !== req.auth.userId) {
                 return res.status(403).json({ message: "Non autorisé !" });
             }
 
             // Suppression du fichier image
             console.log("imageUrl:", book.imageUrl);
             const filename = book.imageUrl.split('/images/')[1];
-            console.log(filename)
             fs.unlink(`images/${filename}`, () => {
                 // Suppression du livre en base
                 Book.deleteOne({ _id: req.params.id })
