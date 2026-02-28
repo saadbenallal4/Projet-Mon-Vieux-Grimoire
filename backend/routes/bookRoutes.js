@@ -25,6 +25,6 @@ router.delete('/:id', auth, bookController.deleteBook);
 router.put('/:id', auth, bookController.updateBook);
 
 /* POST noter un livre */
-router.post('/:id/rating', auth, bookCtrl.rateBook);
+router.post('/:id/rating', auth, bookController.rateBook);
 
 module.exports = router;

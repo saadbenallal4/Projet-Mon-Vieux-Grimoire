@@ -14,6 +14,28 @@ const bookRoutes = require('./routes/bookRoutes');
 /*CREATION DE L'APPLICATION*/
 const app = express();
 
+/* CONFIGURATION CORS
+   Permet au frontend (localhost:3000)
+   d'accéder au backend (localhost:4000)*/
+app.use((req, res, next) => {
+    // Autorise les requêtes venant du frontend React
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+
+    // Autorise certains headers (dont Authorization pour le token)
+    res.setHeader(
+        'Access-Control-Allow-Headers',
+        'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization'
+    );
+
+    // Autorise les méthodes HTTP nécessaires
+    res.setHeader(
+        'Access-Control-Allow-Methods',
+        'GET, POST, PUT, DELETE, PATCH, OPTIONS'
+    );
+
+    next();
+});
+
 /* Middleware permettant d'analyser les requêtes entrantes
  * contenant du JSON.
  * Il transforme le body JSON en objet JavaScript
