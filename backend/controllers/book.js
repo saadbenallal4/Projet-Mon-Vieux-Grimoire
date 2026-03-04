@@ -2,6 +2,7 @@
 // Permet d’interagir avec la collection "books" de MongoDB
 const Book = require('../models/Book');
 const sharp = require('sharp');
+const path = require('path');
 const fs = require('fs');
 
 // CREER UN LIVRE
@@ -69,8 +70,6 @@ exports.getOneBook = (req, res) => {
 exports.deleteBook = (req, res) => {
     Book.findOne({ _id: req.params.id })
         .then(book => {
-            console.log("book.userId:", book.userId);
-            console.log("req.auth.userId:", req.auth.userId);
             // Sécurité : seul le propriétaire peut supprimer
             // utilisation de .equals() pour éviter les pb de comparaisons de type
             if (book.userId !== req.auth.userId) {
@@ -78,7 +77,6 @@ exports.deleteBook = (req, res) => {
             }
 
             // Suppression du fichier image
-            console.log("imageUrl:", book.imageUrl);
             const filename = book.imageUrl.split('/images/')[1];
             fs.unlink(`images/${filename}`, () => {
                 // Suppression du livre en base
@@ -94,13 +92,28 @@ exports.deleteBook = (req, res) => {
 // Route : PUT /api/books/:id
 exports.updateBook = (req, res) => {
 
-    // Si une nouvelle image est envoyée
+    // Création de l'objet livre à mettre à jour
+    // Si une nouvelle image est envoyée, on met à jour l'URL de l'image
     const bookObject = req.file
         ? {
-            ...req.body,
-            imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+            ...req.body, // on récupère les nouvelles données envoyées dans le body
+            imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}` // nouvelle URL de l'image
         }
-        : { ...req.body };
+        : { ...req.body }; // sinon on garde simplement les données du body sans changer l'image
+
+
+    // Si une nouvelle image est envoyée on l'optimise avec Sharp
+    if (req.file) {
+
+
+        const outputPath = path.join('images', req.file.filename);
+
+        sharp(req.file.buffer)
+            .resize({ width: 800 }) // largeur max 800px
+            .webp({ quality: 80 }) // conversion en WebP compressée
+            .toFile(outputPath) // sauvegarde optimisée
+            .catch(error => console.error(error)); // gestion d'erreur si Sharp échoue
+    }
 
     delete bookObject._userId; // On empêche la modification du userId
 
@@ -132,6 +145,7 @@ exports.updateBook = (req, res) => {
         .catch(error => res.status(400).json({ error }));
 };
 
+// NOTER UN LIVRE
 exports.rateBook = (req, res) => {
     Book.findOne({ _id: req.params.id })
         .then(book => {
@@ -172,4 +186,13 @@ exports.rateBook = (req, res) => {
             // Erreur lors de la récupération du livre
             res.status(404).json({ error });
         });
+};
+
+// GET les 3 livres les mieux notés 
+exports.getBestRatedBooks = (req, res) => {
+    Book.find()
+        .sort({ averageRating: -1 }) // trie du meilleur au moins bon
+        .limit(3) // limite à 3 livres
+        .then(books => res.status(200).json(books))
+        .catch(error => res.status(400).json({ error }));
 };

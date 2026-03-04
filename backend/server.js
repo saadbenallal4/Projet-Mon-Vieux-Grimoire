@@ -9,17 +9,16 @@ const express = require('express');
 const mongoose = require('mongoose');
 const Book = require('./models/Book');
 const authRoutes = require('./routes/auth');
-const bookRoutes = require('./routes/bookRoutes');
+const bookRoutes = require('./routes/book');
 
 /*CREATION DE L'APPLICATION*/
 const app = express();
 
 /* CONFIGURATION CORS
-   Permet au frontend (localhost:3000)
-   d'accéder au backend (localhost:4000)*/
+   Autorise toutes les oigines à accéder à l'API */
 app.use((req, res, next) => {
     // Autorise les requêtes venant du frontend React
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.setHeader('Access-Control-Allow-Origin', '*');
 
     // Autorise certains headers (dont Authorization pour le token)
     res.setHeader(

@@ -32,7 +32,6 @@ function SignIn({ setUser }) {
       });
       if (!response?.data?.token) {
         setNotification({ error: true, message: 'Une erreur est survenue' });
-        console.log('Something went wrong during signing in: ', response);
       } else {
         storeInLocalStorage(response.data.token, response.data.userId);
         setUser(response.data);
@@ -41,7 +40,6 @@ function SignIn({ setUser }) {
     } catch (err) {
       console.log(err);
       setNotification({ error: true, message: err.message });
-      console.log('Some error occured during signing in: ', err);
     } finally {
       setIsLoading(false);
     }
@@ -59,13 +57,11 @@ function SignIn({ setUser }) {
         },
       });
       if (!response?.data) {
-        console.log('Something went wrong during signing up: ', response);
         return;
       }
       setNotification({ error: false, message: 'Votre compte a bien été créé, vous pouvez vous connecter' });
     } catch (err) {
       setNotification({ error: true, message: err.message });
-      console.log('Some error occured during signing up: ', err);
     } finally {
       setIsLoading(false);
     }
@@ -124,9 +120,9 @@ function SignIn({ setUser }) {
             onClick={signUp}
           >
             {
-                isLoading
-                  ? <div className="mr-2 w-5 h-5 border-l-2 rounded-full animate-spin" /> : null
-              }
+              isLoading
+                ? <div className="mr-2 w-5 h-5 border-l-2 rounded-full animate-spin" /> : null
+            }
             <span>
               {'S\'inscrire'}
             </span>
