@@ -92,12 +92,15 @@ exports.deleteBook = (req, res) => {
 // Route : PUT /api/books/:id
 exports.updateBook = (req, res) => {
 
+    // Si une nouvelle image est envoyée
+    const filename = Date.now() + '.webp';
+
     // Création de l'objet livre à mettre à jour
     // Si une nouvelle image est envoyée, on met à jour l'URL de l'image
     const bookObject = req.file
         ? {
             ...req.body, // on récupère les nouvelles données envoyées dans le body
-            imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}` // nouvelle URL de l'image
+            imageUrl: `${req.protocol}://${req.get('host')}/images/${filename}` // nouvelle URL de l'image
         }
         : { ...req.body }; // sinon on garde simplement les données du body sans changer l'image
 
@@ -106,7 +109,7 @@ exports.updateBook = (req, res) => {
     if (req.file) {
 
 
-        const outputPath = path.join('images', req.file.filename);
+        const outputPath = path.join('images', filename);
 
         sharp(req.file.buffer)
             .resize({ width: 800 }) // largeur max 800px
